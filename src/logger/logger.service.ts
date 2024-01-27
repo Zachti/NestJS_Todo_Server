@@ -1,8 +1,7 @@
-import { Global, Injectable, OnModuleDestroy } from '@nestjs/common';
-import winston, { format } from 'winston';
+import { Injectable, OnModuleDestroy } from '@nestjs/common';
+import * as winston from 'winston';
 import { LogLevel } from './enums/enums';
 
-@Global()
 @Injectable()
 export class LoggerService implements OnModuleDestroy {
   private readonly _logger: winston.Logger;
@@ -20,8 +19,8 @@ export class LoggerService implements OnModuleDestroy {
 
   private createFormat() {
     return winston.format.combine(
-      format.timestamp({ format: 'DD-MM-YYYY HH:mm:ss.SSS' }),
-      format.printf((info) => {
+      winston.format.timestamp({ format: 'DD-MM-YYYY HH:mm:ss.SSS' }),
+      winston.format.printf((info) => {
         return `${info.timestamp} ${info.level.toUpperCase()}: ${info.message}`;
       }),
     );
@@ -36,7 +35,7 @@ export class LoggerService implements OnModuleDestroy {
   }
 
   log(message: any, ...optionalParams: any[]): void {
-    this.logger.debug(message, { ...optionalParams });
+    this.logger.log(message, { ...optionalParams });
   }
 
   warn(message: string): void {
@@ -47,8 +46,8 @@ export class LoggerService implements OnModuleDestroy {
     this.logger.debug(message, metadata);
   }
 
-  info(message: string): void {
-    this.logger.info(message);
+  info(message: string, metadata?: Record<any, any>): void {
+    this.logger.info(message, metadata);
   }
 
   error(
