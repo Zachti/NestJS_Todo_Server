@@ -22,7 +22,7 @@ services:
     build:
       context: ./
       dockerfile: 'dockerfile'
-      target: 'builder'
+      target: 'build'
     command: sh -c "npm run start:dev"
     restart: 'unless-stopped'
     volumes:

@@ -1,4 +1,4 @@
-FROM node:18.16.1-alpine as builder
+FROM node:18.16.1-alpine as build
 
 WORKDIR /tmp/
 
@@ -22,4 +22,4 @@ COPY --from=build /tmp/dist ./dist
 
 RUN apk --no-cache add curl
 
-CMD ["node", "dist/src/main.js"]
+CMD ["node", "dist/main.js"]
