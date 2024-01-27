@@ -4,15 +4,17 @@ import {
   ArgumentMetadata,
   BadRequestException,
 } from '@nestjs/common';
-import { SortByTypes } from '../enums/enums';
+import { State } from '../enums/enums';
 
 @Injectable()
-export class SortByTypeValidator implements PipeTransform<string> {
+export class StateValidationPipe implements PipeTransform<string> {
   transform(value: string, metadata: ArgumentMetadata): string {
     if (!value) return value;
-    if (!SortByTypes[value as keyof typeof SortByTypes]) {
-      throw new BadRequestException('Error: invalid sortBy!');
+
+    if (!(value in State)) {
+      throw new BadRequestException('Error: invalid status!');
     }
+
     return value;
   }
 }

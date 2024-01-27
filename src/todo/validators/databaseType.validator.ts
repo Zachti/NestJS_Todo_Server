@@ -10,9 +10,7 @@ import { DatabaseType } from '../enums/enums';
 export class DatabaseTypeValidationPipe implements PipeTransform {
   transform(value: any, metadata: ArgumentMetadata): any {
     if (!(value in DatabaseType)) {
-      throw new BadRequestException(
-        `Invalid value for the "${metadata.data}" query parameter.`,
-      );
+      throw new BadRequestException('Error: invalid DB!');
     }
     return value;
   }
