@@ -1,7 +1,8 @@
 import {
-  BadRequestException,
+  ConflictException,
   Injectable,
   InternalServerErrorException,
+  NotFoundException,
 } from '@nestjs/common';
 import { CreateTodoDto } from './dto/create-todo.dto';
 import { UpdateTodoDto } from './dto/update-todo.dto';
@@ -19,6 +20,7 @@ export class TodoService {
     private readonly mongoConnection: DataSource,
   ) {}
   async create(createTodoDto: CreateTodoDto) {
+    await this.checkIfTodoExist({ title: createTodoDto.title });
     try {
       this.postgresConnection.getRepository(Todos).create(createTodoDto);
       return await this.mongoConnection
@@ -67,11 +69,7 @@ export class TodoService {
   }
 
   async update(rawid: number, updateTodoDto: UpdateTodoDto) {
-    const postgresTodo = await this.postgresConnection
-      .getRepository(Todos)
-      .findOneBy({ rawid });
-    if (!postgresTodo)
-      throw new BadRequestException(`Error: no such TODO with id ${rawid}`);
+    await this.checkIfTodoExist({ rawid });
     try {
       await this.postgresConnection
         .getRepository(Todos)
@@ -87,14 +85,7 @@ export class TodoService {
   }
 
   async remove(rawid: number) {
-    const postgresTodo = await this.postgresConnection
-      .getRepository(Todos)
-      .findOneBy({ rawid });
-    const mongoTodo = await this.mongoConnection
-      .getRepository(Todos)
-      .findOneBy({ rawid });
-    if (!postgresTodo)
-      throw new BadRequestException(`Error: no such TODO with id ${rawid}`);
+    const { postgresTodo, mongoTodo } = await this.checkIfTodoExist({ rawid });
     try {
       await this.postgresConnection.getRepository(Todos).remove(postgresTodo);
       return await this.mongoConnection.getRepository(Todos).remove(mongoTodo);
@@ -113,5 +104,31 @@ export class TodoService {
       case DatabaseType.Mongo:
         return this.mongoConnection.getRepository(Todos);
     }
+  }
+
+  private async checkIfTodoExist(input: { title?: string; rawid?: number }) {
+    const { title, rawid } = input;
+
+    const postgresTodo = title
+      ? await this.postgresConnection.getRepository(Todos).findOneBy({ title })
+      : await this.postgresConnection.getRepository(Todos).findOneBy({ rawid });
+
+    const mongoTodo = title
+      ? await this.mongoConnection.getRepository(Todos).findOneBy({ title })
+      : await this.mongoConnection.getRepository(Todos).findOneBy({ rawid });
+
+    if (title) {
+      if (postgresTodo || mongoTodo)
+        throw new ConflictException(
+          `Error: TODO with the title [${title}] already exists in the DB`,
+        );
+    }
+    if (!(postgresTodo && mongoTodo))
+      throw new NotFoundException(`Error: no such TODO with id ${rawid}`);
+
+    return {
+      postgresTodo,
+      mongoTodo,
+    };
   }
 }

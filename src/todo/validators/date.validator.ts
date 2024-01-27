@@ -1,20 +1,21 @@
+import { ConflictException } from '@nestjs/common';
 import {
   registerDecorator,
   ValidationOptions,
   ValidatorConstraint,
   ValidatorConstraintInterface,
-  ValidationArguments,
 } from 'class-validator';
 
 @ValidatorConstraint({ name: 'dateNotInPast', async: false })
 export class DateNotInPastConstraint implements ValidatorConstraintInterface {
   validate(value: number) {
     const currentDate = new Date();
-    return value >= currentDate.getTime();
-  }
-
-  defaultMessage(args: ValidationArguments) {
-    return `Error: Can’t create new TODO that its due date is in the past`;
+    if (value < currentDate.getTime()) {
+      throw new ConflictException(
+        `Error: Can't create new TODO with a due date in the past`,
+      );
+    }
+    return true;
   }
 }
 
