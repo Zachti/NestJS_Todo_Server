@@ -63,7 +63,7 @@ export class TodoService {
                 return a.title.localeCompare(b.title);
             }
           })
-        : res.sort((a, b) => a.rawid - b.rawid).map((todo) => todo.content);
+        : res.sort((a, b) => a.rawid - b.rawid);
     } catch (e) {
       throw new InternalServerErrorException('Could not connect to the DB.');
     }
