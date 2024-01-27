@@ -12,7 +12,7 @@ COPY . .
 
 RUN npm run build
 
-FROM node:18.16.1-alpine as wolverine
+FROM node:18.16.1-alpine as app
 
 WORKDIR /app/
 
