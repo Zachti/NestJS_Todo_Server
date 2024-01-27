@@ -8,6 +8,12 @@ import {
   validationSchema,
 } from './config';
 import { ConfigModule, ConfigType } from '@nestjs/config';
+import { APP_FILTER } from '@nestjs/core';
+import {
+  CustomBadRequestExceptionFilter,
+  CustomConflictExceptionFilter,
+  CustomNotFoundExceptionFilter,
+} from './exceptionsFilter';
 
 @Module({
   imports: [
@@ -54,6 +60,20 @@ import { ConfigModule, ConfigType } from '@nestjs/config';
       },
       inject: [mongoConfig.KEY, commonConfig.KEY],
     }),
+  ],
+  providers: [
+    {
+      provide: APP_FILTER,
+      useClass: CustomBadRequestExceptionFilter,
+    },
+    {
+      provide: APP_FILTER,
+      useClass: CustomConflictExceptionFilter,
+    },
+    {
+      provide: APP_FILTER,
+      useClass: CustomNotFoundExceptionFilter,
+    },
   ],
 })
 export class AppModule {}
