@@ -2,7 +2,7 @@ import { registerAs } from '@nestjs/config';
 import * as Joi from 'joi';
 
 export const postgresConfig = registerAs('postgres', () => ({
-  port: process.env.POSTGRES_PORT,
+  port: parseInt(process.env.POSTGRES_PORT),
   url: process.env.POSTGRES_URL,
   username: process.env.POSTGRES_USERNAME,
   password: process.env.POSTGRES_PASSWORD,

@@ -2,7 +2,7 @@ import { registerAs } from '@nestjs/config';
 import * as Joi from 'joi';
 
 export const mongoConfig = registerAs('mongo', () => ({
-  port: process.env.MONGO_PORT,
+  port: parseInt(process.env.MONGO_PORT),
   url: process.env.MONGO_URL,
 }));
 
