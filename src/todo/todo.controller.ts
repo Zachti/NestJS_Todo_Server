@@ -24,42 +24,45 @@ export class TodoController {
   }
 
   @Post()
-  create(@Body() createTodoDto: CreateTodoDto) {
-    return this.todoService.create(createTodoDto);
+  async create(@Body() createTodoDto: CreateTodoDto) {
+    const id = await this.todoService.create(createTodoDto);
+    return { result: id };
   }
 
   @Get('size')
   @UsePipes(new DatabaseTypeValidationPipe())
-  count(
+  async count(
     @Query('database') database: DatabaseType,
     @Query('status') status: State,
   ) {
-    return this.todoService.count(database, status);
+    const count = await this.todoService.count(database, status);
+    return { result: count };
   }
 
   @Get('content')
   @UsePipes(new DatabaseTypeValidationPipe(), new SortByTypeValidator())
-  getContent(
+  async getContent(
     @Query('database') database: DatabaseType,
     @Query('status') status: State,
     @Query('sortBy') sortBy: SortByTypes,
   ) {
-    return this.todoService.getContent(database, status, sortBy);
+    const todoList = await this.todoService.getContent(
+      database,
+      status,
+      sortBy,
+    );
+    return { result: todoList };
   }
 
   @Put()
-  update(
-    @Query('id') id: string,
-    @Query('status') state: State,
-    @Query('title') title: string,
-    @Query('content') content: string,
-    @Query('duedate') duedate: number,
-  ) {
-    return this.todoService.update(+id, { state, title, content, duedate });
+  async update(@Query('id') id: string, @Query('status') state: State) {
+    const oldStatus = await this.todoService.update(+id, { state });
+    return { result: oldStatus };
   }
 
   @Delete()
-  remove(@Query('id') id: string) {
-    return this.todoService.remove(+id);
+  async remove(@Query('id') id: string) {
+    const count = await this.todoService.remove(+id);
+    return { result: count };
   }
 }

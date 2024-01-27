@@ -23,9 +23,10 @@ export class TodoService {
     await this.checkIfTodoExist({ title: createTodoDto.title });
     try {
       this.postgresConnection.getRepository(Todos).create(createTodoDto);
-      return await this.mongoConnection
+      const res = await this.mongoConnection
         .getRepository(Todos)
         .save(createTodoDto);
+      return res.rawid;
     } catch (e) {
       throw new InternalServerErrorException(
         'Could not connect to at least one DB.',
@@ -57,7 +58,7 @@ export class TodoService {
               case SortByTypes.Id:
                 return a.rawid - b.rawid;
               case SortByTypes.DueDate:
-                return a.duedate - b.duedate;
+                return a.dueDate - b.dueDate;
               case SortByTypes.Title:
                 return a.title.localeCompare(b.title);
             }
@@ -69,14 +70,15 @@ export class TodoService {
   }
 
   async update(rawid: number, updateTodoDto: UpdateTodoDto) {
-    await this.checkIfTodoExist({ rawid });
+    const { postgresTodo } = await this.checkIfTodoExist({ rawid });
     try {
       await this.postgresConnection
         .getRepository(Todos)
         .update(rawid, updateTodoDto);
-      return await this.mongoConnection
+      await this.mongoConnection
         .getRepository(Todos)
         .update(rawid, updateTodoDto);
+      return postgresTodo.state;
     } catch (e) {
       throw new InternalServerErrorException(
         'Could not connect to at least one DB.',
@@ -88,7 +90,8 @@ export class TodoService {
     const { postgresTodo, mongoTodo } = await this.checkIfTodoExist({ rawid });
     try {
       await this.postgresConnection.getRepository(Todos).remove(postgresTodo);
-      return await this.mongoConnection.getRepository(Todos).remove(mongoTodo);
+      await this.mongoConnection.getRepository(Todos).remove(mongoTodo);
+      return this.mongoConnection.getRepository(Todos).count();
     } catch (e) {
       throw new InternalServerErrorException(
         'Could not connect to at least one DB.',

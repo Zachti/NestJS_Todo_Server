@@ -13,7 +13,7 @@ export class Todos {
   content: string;
 
   @Column({ type: 'bigint' })
-  duedate: number;
+  dueDate: number;
 
   @Column({ default: State.Pending })
   state: State;

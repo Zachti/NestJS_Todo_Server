@@ -29,7 +29,7 @@ services:
        - .:/home/node
        - ./node_modules:/home/node
     depends_on:
-      #- postgres
+      - postgres
       - mongo
 
 networks:
