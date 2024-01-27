@@ -68,7 +68,7 @@ export class TodoController {
 
   @Put()
   @HttpCode(200)
-  @UsePipes(new StateValidationPipe())
+  @UsePipes(new StateValidationPipe({ disallowAll: true }))
   async update(@Query('id') id: string, @Query('status') state: State) {
     const oldStatus = await this.todoService.update(+id, { state });
     return { result: oldStatus };
