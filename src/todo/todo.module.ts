@@ -5,10 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Todos } from './entities/todo.entity';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([Todos]),
-    TypeOrmModule.forFeature([Todos]),
-  ],
+  imports: [TypeOrmModule.forFeature([Todos])],
   controllers: [TodoController],
   providers: [TodoService],
 })
