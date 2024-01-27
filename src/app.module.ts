@@ -21,7 +21,7 @@ import {
     ConfigModule.forRoot({
       isGlobal: true,
       load: [commonConfig, mongoConfig, postgresConfig],
-      validationSchema: validationSchema,
+      validationSchema,
       validationOptions: { presence: 'required' },
     }),
     TypeOrmModule.forRootAsync({
