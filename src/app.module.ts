@@ -14,6 +14,7 @@ import {
   CustomConflictExceptionFilter,
   CustomNotFoundExceptionFilter,
 } from './exceptionsFilter';
+import { LoggerModule } from './logger/logger.module';
 
 @Module({
   imports: [
@@ -60,6 +61,7 @@ import {
       },
       inject: [mongoConfig.KEY, commonConfig.KEY],
     }),
+    LoggerModule,
   ],
   providers: [
     {

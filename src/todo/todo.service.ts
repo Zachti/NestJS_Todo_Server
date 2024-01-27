@@ -10,6 +10,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { Todos } from './entities/todo.entity';
 import { DatabaseType, SortByTypes, State } from './enums/enums';
+import { LoggerService } from '../logger/logger.service';
 
 @Injectable()
 export class TodoService {
@@ -18,6 +19,7 @@ export class TodoService {
     private todosRepository: Repository<Todos>,
     private readonly postgresConnection: DataSource,
     private readonly mongoConnection: DataSource,
+    private readonly logger: LoggerService,
   ) {}
   async create(createTodoDto: CreateTodoDto) {
     await this.checkIfTodoExist({ title: createTodoDto.title });
@@ -26,22 +28,26 @@ export class TodoService {
       const res = await this.mongoConnection
         .getRepository(Todos)
         .save(createTodoDto);
+      this.logger.info(`new todo created in the DBs. id: ${res.rawid}`);
       return res.rawid;
     } catch (e) {
-      throw new InternalServerErrorException(
-        'Could not connect to at least one DB.',
-      );
+      this.logAndThrowInternalServerException(e);
     }
   }
 
-  count(database: DatabaseType, state: State) {
+  async count(database: DatabaseType, state: State) {
     try {
       this.todosRepository = this.getDbConnection(database);
-      return state == State.All
-        ? this.todosRepository.count()
-        : this.todosRepository.count({ where: { state } });
+      const res =
+        state == State.All
+          ? await this.todosRepository.count()
+          : await this.todosRepository.count({ where: { state } });
+      this.logger.info(
+        `The sum of todo with state: ${state} in ${database} DB is: ${res}`,
+      );
+      return res;
     } catch (e) {
-      throw new InternalServerErrorException('Could not connect to the DB.');
+      this.logAndThrowInternalServerException(e);
     }
   }
 
@@ -52,7 +58,7 @@ export class TodoService {
         state == State.All
           ? await this.todosRepository.find()
           : await this.todosRepository.find({ where: { state } });
-      return sortBy
+      const todoList = sortBy
         ? res.sort((a, b) => {
             switch (sortBy.toUpperCase()) {
               case SortByTypes.Id:
@@ -64,8 +70,12 @@ export class TodoService {
             }
           })
         : res.sort((a, b) => a.rawid - b.rawid);
+      this.logger.info(
+        `Todo list fetched from ${database} DB in state: ${state} sorted by: ${sortBy}`,
+      );
+      return todoList;
     } catch (e) {
-      throw new InternalServerErrorException('Could not connect to the DB.');
+      this.logAndThrowInternalServerException(e);
     }
   }
 
@@ -78,11 +88,12 @@ export class TodoService {
       await this.mongoConnection
         .getRepository(Todos)
         .update(rawid, updateTodoDto);
+      this.logger.info(
+        `Todo with id: ${rawid} updated to status: ${updateTodoDto.state}`,
+      );
       return postgresTodo.state;
     } catch (e) {
-      throw new InternalServerErrorException(
-        'Could not connect to at least one DB.',
-      );
+      this.logAndThrowInternalServerException(e);
     }
   }
 
@@ -91,11 +102,13 @@ export class TodoService {
     try {
       await this.postgresConnection.getRepository(Todos).remove(postgresTodo);
       await this.mongoConnection.getRepository(Todos).remove(mongoTodo);
-      return this.mongoConnection.getRepository(Todos).count();
-    } catch (e) {
-      throw new InternalServerErrorException(
-        'Could not connect to at least one DB.',
+      const count = await this.mongoConnection.getRepository(Todos).count();
+      this.logger.info(
+        `The number of todos in the DBs after Todo with id: ${rawid} deleted is: ${count}`,
       );
+      return count;
+    } catch (e) {
+      this.logAndThrowInternalServerException(e);
     }
   }
 
@@ -121,17 +134,31 @@ export class TodoService {
       : await this.mongoConnection.getRepository(Todos).findOneBy({ rawid });
 
     if (title) {
-      if (postgresTodo || mongoTodo)
+      if (postgresTodo || mongoTodo) {
+        this.logger.error(
+          `Error: TODO with the title [${title}] already exists in the DB`,
+        );
         throw new ConflictException(
           `Error: TODO with the title [${title}] already exists in the DB`,
         );
+      }
     }
-    if (!(postgresTodo && mongoTodo))
+    if (!(postgresTodo && mongoTodo)) {
+      this.logger.error(`Error: no such TODO with id ${rawid}`);
       throw new NotFoundException(`Error: no such TODO with id ${rawid}`);
+    }
 
     return {
       postgresTodo,
       mongoTodo,
     };
+  }
+
+  private logAndThrowInternalServerException(e: any) {
+    this.logger.error('Could not connect to at least one DB.');
+    throw new InternalServerErrorException(
+      'Could not connect to at least one DB.',
+      e,
+    );
   }
 }
