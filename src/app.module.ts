@@ -1,12 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TodoModule, Todos } from './todo';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import {
-  postgresConfig,
-  commonConfig,
-  mongoConfig,
-  validationSchema,
-} from './config';
+import { postgresConfig, mongoConfig, validationSchema } from './config';
 import { ConfigModule, ConfigType } from '@nestjs/config';
 import { APP_FILTER } from '@nestjs/core';
 import {
@@ -21,45 +16,34 @@ import { LoggerModule } from './logger/logger.module';
     TodoModule,
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [commonConfig, mongoConfig, postgresConfig],
+      load: [mongoConfig, postgresConfig],
       validationSchema,
       validationOptions: { presence: 'required' },
     }),
     TypeOrmModule.forRootAsync({
-      useFactory: (
-        postgresCfg: ConfigType<typeof postgresConfig>,
-        config: ConfigType<typeof commonConfig>,
-      ) => {
+      useFactory: (postgresCfg: ConfigType<typeof postgresConfig>) => {
         return {
           type: 'postgres',
           url: postgresCfg.url,
-          host: config.host,
-          port: postgresCfg.port,
-          username: postgresCfg.username,
-          password: postgresCfg.password,
-          database: config.databaseName,
           entities: [Todos],
-          synchronize: true,
+          synchronize: false,
         };
       },
-      inject: [postgresConfig.KEY, commonConfig.KEY],
+      inject: [postgresConfig.KEY],
     }),
     TypeOrmModule.forRootAsync({
-      useFactory: (
-        mongoCfg: ConfigType<typeof mongoConfig>,
-        config: ConfigType<typeof commonConfig>,
-      ) => {
+      useFactory: (mongoCfg: ConfigType<typeof mongoConfig>) => {
         return {
           type: 'mongodb',
-          url: mongoCfg.url,
-          host: config.host,
+          host: mongoCfg.host,
           port: mongoCfg.port,
-          database: config.databaseName,
+          database: mongoCfg.database,
+          collection: mongoCfg.collection,
           entities: [Todos],
-          synchronize: true,
+          synchronize: false,
         };
       },
-      inject: [mongoConfig.KEY, commonConfig.KEY],
+      inject: [mongoConfig.KEY],
     }),
     LoggerModule,
   ],
