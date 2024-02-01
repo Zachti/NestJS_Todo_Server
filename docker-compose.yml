@@ -17,7 +17,7 @@ services:
       - todo_network
     ports:
       - '27017:27017'
-  app:
+  todoApp:
     networks:
       - todo_network
     ports:
