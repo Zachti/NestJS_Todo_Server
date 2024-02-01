@@ -36,15 +36,10 @@ export class TodoService {
       });
 
       const res = await this.postgresRepository.save(newTodo);
+      const mongoTodo = this.mongoRepository.create(res);
 
-      const mongoTodo = new MongoTodo();
-      Object.assign(mongoTodo, res);
+      await this.mongoRepository.save(mongoTodo);
 
-      try {
-        await this.mongoRepository.save(mongoTodo);
-      } catch (e) {
-        console.error(e);
-      }
       this.logger.info(`new todo created in the DBs. id: ${res.rawid}`);
       return res.rawid;
     } catch (e) {
