@@ -7,42 +7,47 @@ import {
 import { CreateTodoDto } from './dto/create-todo.dto';
 import { UpdateTodoDto } from './dto/update-todo.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Todos } from './entities/todo.entity';
 import { DatabaseType, SortByTypes, State } from './enums/enums';
 import { LoggerService } from '../logger/logger.service';
+import { MongoTodo } from './entities/mongoTodo.entity';
 
 @Injectable()
 export class TodoService {
   constructor(
-    @InjectRepository(Todos)
-    private todosRepository: Repository<Todos>,
-    private readonly postgresConnection: DataSource,
-    private readonly mongoConnection: DataSource,
+    @InjectRepository(MongoTodo, 'mongodb')
+    private mongoRepository: Repository<MongoTodo>,
+    @InjectRepository(Todos, 'postgres')
+    private postgresRepository: Repository<Todos>,
     private readonly logger: LoggerService,
   ) {}
   async create(createTodoDto: CreateTodoDto) {
     await this.checkIfTodoExist({ title: createTodoDto.title }, true);
-    const existingTodosCount = await this.postgresConnection
-      .getRepository(Todos)
-      .count();
-    const { title, content, dueDate } = createTodoDto;
     try {
-      const r = this.postgresConnection.getRepository(Todos).create({
-        title,
-        content,
-        duedate: dueDate,
-        rawid: existingTodosCount + 1,
+      const maxRawid = await this.postgresRepository
+        .createQueryBuilder('todos')
+        .select('MAX(todos.rawid)', 'max')
+        .getRawOne();
+      const newTodo = this.postgresRepository.create({
+        ...createTodoDto,
+        duedate: createTodoDto.dueDate,
         state: State.Pending,
+        rawid: maxRawid.max + 1,
       });
-      this.logger.info(`res: ${JSON.stringify(r)}`);
-      const res = this.mongoConnection.getRepository(Todos).create({
-        title,
-        content,
-        duedate: dueDate,
-        rawid: existingTodosCount + 1,
-        state: State.Pending,
-      });
+
+      const res = await this.postgresRepository.save(newTodo);
+
+      try {
+        this.mongoRepository.create({
+          ...createTodoDto,
+          duedate: createTodoDto.dueDate,
+          state: State.Pending,
+          rawid: maxRawid.max + 1,
+        });
+      } catch (e) {
+        console.error(e);
+      }
       this.logger.info(`new todo created in the DBs. id: ${res.rawid}`);
       this.logger.info(`res: ${JSON.stringify(res)}`);
       return res.rawid;
@@ -53,11 +58,13 @@ export class TodoService {
 
   async count(database: DatabaseType, state: State) {
     try {
-      this.todosRepository = this.getDbConnection(database);
+      const repository = this.getDbConnection(database);
+
       const res =
-        state == State.All
-          ? await this.todosRepository.count()
-          : await this.todosRepository.count({ where: { state } });
+        state === State.All
+          ? await repository.count()
+          : (await repository.find({ where: { state } })).length;
+
       this.logger.info(
         `The sum of todo with state: ${state} in ${database} DB is: ${res}`,
       );
@@ -69,23 +76,36 @@ export class TodoService {
 
   async getContent(database: DatabaseType, state: State, sortBy: SortByTypes) {
     try {
-      this.todosRepository = this.getDbConnection(database);
-      const res =
+      const repository = this.getDbConnection(database);
+      let res =
         state == State.All
-          ? await this.todosRepository.find()
-          : await this.todosRepository.find({ where: { state } });
+          ? await repository.find()
+          : await repository.find({ where: { state } });
+
+      if (database === 'MONGO') {
+        res = res.map((item) => {
+          delete item._id;
+          return item;
+        });
+      }
+
+      const outputTodo = res.map((item) => {
+        const { rawid, ...rest } = item;
+        return { id: rawid, ...rest };
+      });
+
       const todoList = sortBy
-        ? res.sort((a, b) => {
+        ? outputTodo.sort((a, b) => {
             switch (sortBy.toUpperCase()) {
               case SortByTypes.Id:
-                return a.rawid - b.rawid;
+                return a.id - b.id;
               case SortByTypes.DueDate:
                 return a.duedate - b.duedate;
               case SortByTypes.Title:
                 return a.title.localeCompare(b.title);
             }
           })
-        : res.sort((a, b) => a.rawid - b.rawid);
+        : outputTodo.sort((a, b) => a.id - b.id);
       this.logger.info(
         `Todo list fetched from ${database} DB in state: ${state} sorted by: ${sortBy}`,
       );
@@ -98,12 +118,8 @@ export class TodoService {
   async update(rawid: number, updateTodoDto: UpdateTodoDto) {
     const { postgresTodo } = await this.checkIfTodoExist({ rawid });
     try {
-      await this.postgresConnection
-        .getRepository(Todos)
-        .update(rawid, updateTodoDto);
-      await this.mongoConnection
-        .getRepository(Todos)
-        .update(rawid, updateTodoDto);
+      await this.postgresRepository.update(rawid, updateTodoDto);
+      await this.mongoRepository.update({ rawid }, updateTodoDto);
       this.logger.info(
         `Todo with id: ${rawid} updated to status: ${updateTodoDto.state}`,
       );
@@ -116,9 +132,9 @@ export class TodoService {
   async remove(rawid: number) {
     const { postgresTodo, mongoTodo } = await this.checkIfTodoExist({ rawid });
     try {
-      await this.postgresConnection.getRepository(Todos).remove(postgresTodo);
-      await this.mongoConnection.getRepository(Todos).remove(mongoTodo);
-      const count = await this.mongoConnection.getRepository(Todos).count();
+      await this.postgresRepository.remove(postgresTodo);
+      await this.mongoRepository.remove(mongoTodo);
+      const count = await this.mongoRepository.count();
       this.logger.info(
         `The number of todos in the DBs after Todo with id: ${rawid} deleted is: ${count}`,
       );
@@ -128,14 +144,10 @@ export class TodoService {
     }
   }
 
-  private getDbConnection(database: DatabaseType) {
-    switch (database) {
-      case DatabaseType.Postgres:
-        return this.postgresConnection.getRepository(Todos);
-
-      case DatabaseType.Mongo:
-        return this.mongoConnection.getRepository(Todos);
-    }
+  private getDbConnection(database: DatabaseType): Repository<Todos> {
+    return database === 'MONGO'
+      ? this.mongoRepository
+      : this.postgresRepository;
   }
 
   private async checkIfTodoExist(
@@ -145,12 +157,12 @@ export class TodoService {
     const { title, rawid } = input;
 
     const postgresTodo = title
-      ? await this.postgresConnection.getRepository(Todos).findOneBy({ title })
-      : await this.postgresConnection.getRepository(Todos).findOneBy({ rawid });
+      ? await this.postgresRepository.findOneBy({ title })
+      : await this.postgresRepository.findOneBy({ rawid });
 
     const mongoTodo = title
-      ? await this.mongoConnection.getRepository(Todos).findOneBy({ title })
-      : await this.mongoConnection.getRepository(Todos).findOneBy({ rawid });
+      ? await this.mongoRepository.findOneBy({ title })
+      : await this.mongoRepository.findOneBy({ rawid });
 
     if (title) {
       if (postgresTodo || mongoTodo) {

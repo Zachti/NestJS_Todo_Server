@@ -15,7 +15,7 @@ export class StateValidationPipe implements PipeTransform<string> {
   transform(value: any, metadata: ArgumentMetadata): string {
     if (!value) return value;
 
-    const disallowAll = this.options?.disallowAll;
+    const disallowAll = this.options ? this.options.disallowAll : false;
 
     if (
       (disallowAll && value === State.All) ||

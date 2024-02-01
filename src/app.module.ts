@@ -10,6 +10,7 @@ import {
   CustomNotFoundExceptionFilter,
 } from './exceptionsFilter';
 import { LoggerModule } from './logger/logger.module';
+import { MongoTodo } from './todo/entities/mongoTodo.entity';
 
 @Module({
   imports: [
@@ -21,6 +22,8 @@ import { LoggerModule } from './logger/logger.module';
       validationOptions: { presence: 'required' },
     }),
     TypeOrmModule.forRootAsync({
+      name: 'postgres',
+      imports: [ConfigModule],
       useFactory: (postgresCfg: ConfigType<typeof postgresConfig>) => {
         return {
           type: 'postgres',
@@ -32,6 +35,8 @@ import { LoggerModule } from './logger/logger.module';
       inject: [postgresConfig.KEY],
     }),
     TypeOrmModule.forRootAsync({
+      name: 'mongodb',
+      imports: [ConfigModule],
       useFactory: (mongoCfg: ConfigType<typeof mongoConfig>) => {
         return {
           type: 'mongodb',
@@ -39,8 +44,8 @@ import { LoggerModule } from './logger/logger.module';
           port: mongoCfg.port,
           database: mongoCfg.database,
           collection: mongoCfg.collection,
-          entities: [Todos],
           synchronize: false,
+          entities: [MongoTodo],
         };
       },
       inject: [mongoConfig.KEY],

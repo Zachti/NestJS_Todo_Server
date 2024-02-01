@@ -1,8 +1,12 @@
+import { Column, Entity, ObjectIdColumn, PrimaryColumn } from 'typeorm';
+import { ObjectId } from 'mongodb';
 import { State } from '../enums/enums';
-import { Column, Entity, PrimaryColumn } from 'typeorm';
 
 @Entity('todos')
-export class Todos {
+export class MongoTodo {
+  @ObjectIdColumn()
+  _id: ObjectId;
+
   @PrimaryColumn()
   rawid: number;
 
