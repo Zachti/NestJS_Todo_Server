@@ -1,13 +1,13 @@
 version: '3'
 services:
   postgres:
-    image: theshultz/kaplat-postgres-instance:latest
+    image: postgres:latest
     networks:
       - todo_network
     ports:
       - '5432:5432'
   mongo:
-    image: theshultz/kaplat-mongo-instance:latest
+    image: mongo:latest
     networks:
       - todo_network
     ports:
