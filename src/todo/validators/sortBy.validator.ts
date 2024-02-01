@@ -8,9 +8,9 @@ import { SortByTypes } from '../enums/enums';
 
 @Injectable()
 export class SortByTypeValidator implements PipeTransform<string> {
-  transform(value: string, metadata: ArgumentMetadata): string {
+  transform(value: any, metadata: ArgumentMetadata): string {
     if (!value) return value;
-    if (!SortByTypes[value as keyof typeof SortByTypes]) {
+    if (!Object.values(SortByTypes).includes(value)) {
       throw new BadRequestException('Error: invalid sortBy!');
     }
     return value;

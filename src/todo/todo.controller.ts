@@ -37,7 +37,7 @@ export class TodoController {
   @Get('size')
   @HttpCode(200)
   async count(
-    @Query('database', new DatabaseTypeValidationPipe()) database: DatabaseType,
+    @Query('persistenceMethod', new DatabaseTypeValidationPipe()) database: DatabaseType,
     @Query('status', new StateValidationPipe()) status: State,
   ) {
     const count = await this.todoService.count(database, status);
@@ -47,7 +47,7 @@ export class TodoController {
   @Get('content')
   @HttpCode(200)
   async getContent(
-    @Query('database', new DatabaseTypeValidationPipe()) database: DatabaseType,
+    @Query('persistenceMethod', new DatabaseTypeValidationPipe()) database: DatabaseType,
     @Query('status', new StateValidationPipe()) status: State,
     @Query('sortBy', new SortByTypeValidator()) sortBy: SortByTypes,
   ) {

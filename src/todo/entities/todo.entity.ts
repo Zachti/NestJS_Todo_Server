@@ -1,5 +1,5 @@
 import { State } from '../enums/enums';
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, Generated, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('todos')
 export class Todos {
@@ -13,7 +13,7 @@ export class Todos {
   content: string;
 
   @Column({ type: 'bigint' })
-  dueDate: number;
+  duedate: number;
 
   @Column({ default: State.Pending })
   state: State;

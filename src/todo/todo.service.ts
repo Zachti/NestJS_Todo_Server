@@ -22,13 +22,29 @@ export class TodoService {
     private readonly logger: LoggerService,
   ) {}
   async create(createTodoDto: CreateTodoDto) {
-    await this.checkIfTodoExist({ title: createTodoDto.title });
+    await this.checkIfTodoExist({ title: createTodoDto.title }, true);
+    const existingTodosCount = await this.postgresConnection
+      .getRepository(Todos)
+      .count();
+    const { title, content, dueDate } = createTodoDto;
     try {
-      this.postgresConnection.getRepository(Todos).create(createTodoDto);
-      const res = await this.mongoConnection
-        .getRepository(Todos)
-        .save(createTodoDto);
+      const r = this.postgresConnection.getRepository(Todos).create({
+        title,
+        content,
+        duedate: dueDate,
+        rawid: existingTodosCount + 1,
+        state: State.Pending,
+      });
+      this.logger.info(`res: ${JSON.stringify(r)}`);
+      const res = this.mongoConnection.getRepository(Todos).create({
+        title,
+        content,
+        duedate: dueDate,
+        rawid: existingTodosCount + 1,
+        state: State.Pending,
+      });
       this.logger.info(`new todo created in the DBs. id: ${res.rawid}`);
+      this.logger.info(`res: ${JSON.stringify(res)}`);
       return res.rawid;
     } catch (e) {
       this.logAndThrowInternalServerException(e);
@@ -64,7 +80,7 @@ export class TodoService {
               case SortByTypes.Id:
                 return a.rawid - b.rawid;
               case SortByTypes.DueDate:
-                return a.dueDate - b.dueDate;
+                return a.duedate - b.duedate;
               case SortByTypes.Title:
                 return a.title.localeCompare(b.title);
             }
@@ -122,7 +138,10 @@ export class TodoService {
     }
   }
 
-  private async checkIfTodoExist(input: { title?: string; rawid?: number }) {
+  private async checkIfTodoExist(
+    input: { title?: string; rawid?: number },
+    create: boolean = false,
+  ) {
     const { title, rawid } = input;
 
     const postgresTodo = title
@@ -144,6 +163,7 @@ export class TodoService {
       }
     }
     if (!(postgresTodo && mongoTodo)) {
+      if (create) return;
       this.logger.error(`Error: no such TODO with id ${rawid}`);
       throw new NotFoundException(`Error: no such TODO with id ${rawid}`);
     }
