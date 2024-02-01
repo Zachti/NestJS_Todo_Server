@@ -9,7 +9,8 @@ import { DatabaseType } from '../enums/enums';
 @Injectable()
 export class DatabaseTypeValidationPipe implements PipeTransform {
   transform(value: any, metadata: ArgumentMetadata): any {
-    if (!(value in DatabaseType)) {
+    const DBValues = Object.values(DatabaseType);
+    if (!DBValues.includes(value)) {
       throw new BadRequestException('Error: invalid DB!');
     }
     return value;

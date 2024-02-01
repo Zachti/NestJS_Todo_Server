@@ -15,9 +15,13 @@ export class StateValidationPipe implements PipeTransform<string> {
   transform(value: string, metadata: ArgumentMetadata): string {
     if (!value) return value;
 
-    const disallowAll = this.options?.disallowAll;
+    const disallowAll = this.options ? this.options.disallowAll : false;
+    const stateValues = Object.values(State);
 
-    if ((disallowAll && value === State.All) || !(value in State)) {
+    if (
+      (disallowAll && value === State.All) ||
+      !stateValues.includes(value as State)
+    ) {
       throw new BadRequestException('Error: invalid status!');
     }
 

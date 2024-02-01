@@ -36,27 +36,23 @@ export class TodoController {
   }
 
   @Get('size')
-  @UsePipes(new DatabaseTypeValidationPipe(), new StateValidationPipe())
   @HttpCode(200)
   async count(
-    @Query('database') database: DatabaseType,
-    @Query('status') status: State,
+    @Query('persistenceMethod', new DatabaseTypeValidationPipe())
+    database: DatabaseType,
+    @Query('status', new StateValidationPipe()) status: State,
   ) {
     const count = await this.todoService.count(database, status);
     return { result: count };
   }
 
   @Get('content')
-  @UsePipes(
-    new DatabaseTypeValidationPipe(),
-    new SortByTypeValidator(),
-    new StateValidationPipe(),
-  )
   @HttpCode(200)
   async getContent(
-    @Query('database') database: DatabaseType,
-    @Query('status') status: State,
-    @Query('sortBy') sortBy: SortByTypes,
+    @Query('persistenceMethod', new DatabaseTypeValidationPipe())
+    database: DatabaseType,
+    @Query('status', new StateValidationPipe()) status: State,
+    @Query('sortBy', new SortByTypeValidator()) sortBy: SortByTypes,
   ) {
     const todoList = await this.todoService.getContent(
       database,
@@ -68,8 +64,11 @@ export class TodoController {
 
   @Put()
   @HttpCode(200)
-  @UsePipes(new StateValidationPipe({ disallowAll: true }))
-  async update(@Query('id') id: string, @Query('status') state: State) {
+  async update(
+    @Query('id') id: string,
+    @Query('status', new StateValidationPipe({ disallowAll: true }))
+    state: State,
+  ) {
     const oldStatus = await this.todoService.update(+id, { state });
     return { result: oldStatus };
   }

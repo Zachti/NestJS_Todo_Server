@@ -7,7 +7,7 @@ import {
   mongoConfig,
   validationSchema,
 } from './config';
-import { ConfigModule, ConfigType } from '@nestjs/config';
+import { ConfigModule, ConfigType, ConfigService } from '@nestjs/config';
 import { APP_FILTER } from '@nestjs/core';
 import {
   CustomBadRequestExceptionFilter,
@@ -15,6 +15,7 @@ import {
   CustomNotFoundExceptionFilter,
 } from './exceptionsFilter';
 import { LoggerModule } from './logger/logger.module';
+import { MongoTodo } from './todo/entities/mongoTodo.entity';
 
 @Module({
   imports: [
@@ -26,40 +27,30 @@ import { LoggerModule } from './logger/logger.module';
       validationOptions: { presence: 'required' },
     }),
     TypeOrmModule.forRootAsync({
-      useFactory: (
-        postgresCfg: ConfigType<typeof postgresConfig>,
-        config: ConfigType<typeof commonConfig>,
-      ) => {
+      name: 'postgres',
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => {
         return {
           type: 'postgres',
-          url: postgresCfg.url,
-          host: config.host,
-          port: postgresCfg.port,
-          username: postgresCfg.username,
-          password: postgresCfg.password,
-          database: config.databaseName,
+          url: configService.get('POSTGRES_URL'),
           entities: [Todos],
-          synchronize: true,
+          synchronize: false,
         };
       },
-      inject: [postgresConfig.KEY, commonConfig.KEY],
+      inject: [ConfigService],
     }),
     TypeOrmModule.forRootAsync({
-      useFactory: (
-        mongoCfg: ConfigType<typeof mongoConfig>,
-        config: ConfigType<typeof commonConfig>,
-      ) => {
+      name: 'mongodb',
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => {
         return {
           type: 'mongodb',
-          url: mongoCfg.url,
-          host: config.host,
-          port: mongoCfg.port,
-          database: config.databaseName,
-          entities: [Todos],
-          synchronize: true,
+          url: configService.get('MONGO_URL'),
+          synchronize: false,
+          entities: [MongoTodo],
         };
       },
-      inject: [mongoConfig.KEY, commonConfig.KEY],
+      inject: [ConfigService],
     }),
     LoggerModule,
   ],

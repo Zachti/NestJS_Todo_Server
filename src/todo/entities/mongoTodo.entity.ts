@@ -1,19 +1,23 @@
+import { Entity, Column, ObjectIdColumn } from 'typeorm';
 import { State } from '../enums/enums';
-import { Column, Entity, PrimaryColumn } from 'typeorm';
+import { ObjectId } from 'mongodb';
 
 @Entity('todos')
-export class Todos {
-  @PrimaryColumn()
+export class MongoTodo {
+  @ObjectIdColumn()
+  _id: ObjectId;
+
+  @Column()
   rawid: number;
 
-  @Column({})
+  @Column()
   content: string;
 
   @Column({ type: 'bigint' })
   duedate: number;
 
   @Column({ default: State.Pending })
-  state: State;
+  state: string;
 
   @Column()
   title: string;
