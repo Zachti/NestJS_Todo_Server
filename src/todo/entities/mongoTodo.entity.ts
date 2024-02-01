@@ -1,24 +1,9 @@
-import { Column, Entity, ObjectIdColumn, PrimaryColumn } from 'typeorm';
+import { Entity, ObjectIdColumn } from 'typeorm';
 import { ObjectId } from 'mongodb';
-import { State } from '../enums/enums';
+import { Todos } from './todo.entity';
 
 @Entity('todos')
-export class MongoTodo {
+export class MongoTodo extends Todos {
   @ObjectIdColumn()
   _id: ObjectId;
-
-  @PrimaryColumn()
-  rawid: number;
-
-  @Column({})
-  content: string;
-
-  @Column({ type: 'bigint' })
-  duedate: number;
-
-  @Column({ default: State.Pending })
-  state: State;
-
-  @Column()
-  title: string;
 }

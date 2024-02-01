@@ -29,6 +29,7 @@ export class TodoService {
         .createQueryBuilder('todos')
         .select('MAX(todos.rawid)', 'max')
         .getRawOne();
+
       const newTodo = this.postgresRepository.create({
         ...createTodoDto,
         duedate: createTodoDto.dueDate,
@@ -37,17 +38,9 @@ export class TodoService {
       });
 
       const res = await this.postgresRepository.save(newTodo);
+      const mongoTodo = this.mongoRepository.create(res);
+      await this.mongoRepository.save(mongoTodo);
 
-      try {
-        this.mongoRepository.create({
-          ...createTodoDto,
-          duedate: createTodoDto.dueDate,
-          state: State.Pending,
-          rawid: maxRawid.max + 1,
-        });
-      } catch (e) {
-        console.error(e);
-      }
       this.logger.info(`new todo created in the DBs. id: ${res.rawid}`);
       this.logger.info(`res: ${JSON.stringify(res)}`);
       return res.rawid;
@@ -83,7 +76,7 @@ export class TodoService {
           : await repository.find({ where: { state } });
 
       if (database === 'MONGO') {
-        res = res.map((item) => {
+        res = res.map((item: MongoTodo) => {
           delete item._id;
           return item;
         });
@@ -94,7 +87,7 @@ export class TodoService {
         return { id: rawid, ...rest };
       });
 
-      const todoList = sortBy
+      const outputTodoList = sortBy
         ? outputTodo.sort((a, b) => {
             switch (sortBy.toUpperCase()) {
               case SortByTypes.Id:
@@ -106,10 +99,11 @@ export class TodoService {
             }
           })
         : outputTodo.sort((a, b) => a.id - b.id);
+
       this.logger.info(
         `Todo list fetched from ${database} DB in state: ${state} sorted by: ${sortBy}`,
       );
-      return todoList;
+      return outputTodoList;
     } catch (e) {
       this.logAndThrowInternalServerException(e);
     }
