@@ -24,24 +24,27 @@ export class TodoService {
   ) {}
   async create(createTodoDto: CreateTodoDto) {
     await this.checkIfTodoExist({ title: createTodoDto.title }, true);
+
     try {
       const maxRawid = await this.postgresRepository
         .createQueryBuilder('todos')
         .select('MAX(todos.rawid)', 'max')
         .getRawOne();
 
-      const newTodo = this.postgresRepository.create({
+      const todo = {
         ...createTodoDto,
         duedate: createTodoDto.dueDate,
         state: State.Pending,
         rawid: maxRawid.max + 1,
-      });
+      };
 
-      const mongoTodo = this.mongoRepository.create(newTodo);
+      const newTodo = await this.postgresRepository.save(todo);
 
-      this.logger.info(`new todo created in the DBs. id: ${mongoTodo.rawid}`);
-      this.logger.info(`res: ${JSON.stringify(mongoTodo)}`);
-      return mongoTodo.rawid;
+      await this.mongoRepository.save(todo);
+
+      this.logger.info(`new todo created in the DBs. id: ${newTodo.rawid}`);
+      this.logger.info(`res: ${JSON.stringify(newTodo)}`);
+      return newTodo.rawid;
     } catch (e) {
       this.logAndThrowInternalServerException(e);
     }
@@ -166,6 +169,7 @@ export class TodoService {
         );
       }
     }
+
     if (!(postgresTodo && mongoTodo)) {
       if (create) return;
       this.logger.error(`Error: no such TODO with id ${rawid}`);
