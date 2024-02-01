@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { TodoModule, Todos } from './todo';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { postgresConfig, mongoConfig, validationSchema } from './config';
-import { ConfigModule, ConfigType, ConfigService } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_FILTER } from '@nestjs/core';
 import {
   CustomBadRequestExceptionFilter,

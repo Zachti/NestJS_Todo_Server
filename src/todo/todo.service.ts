@@ -2,13 +2,11 @@ import {
   ConflictException,
   Injectable,
   InternalServerErrorException,
-  NotFoundException,
 } from '@nestjs/common';
-import { ObjectId } from 'mongodb';
 import { CreateTodoDto } from './dto/create-todo.dto';
 import { UpdateTodoDto } from './dto/update-todo.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Todos } from './entities/todo.entity';
 import { MongoTodo } from './entities/mongoTodo.entity';
 import { DatabaseType, SortByTypes, State } from './enums/enums';
