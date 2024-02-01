@@ -99,10 +99,16 @@ export class TodoService {
             }
           })
         : res.sort((a, b) => a.rawid - b.rawid);
+
+      const todoListWithId = todoList.map((item) => {
+        const { rawid, ...rest } = item;
+        return { id: rawid, ...rest };
+      });
+
       this.logger.info(
         `Todo list fetched from ${database} DB in state: ${state} sorted by: ${sortBy}`,
       );
-      return todoList;
+      return todoListWithId;
     } catch (e) {
       this.logAndThrowInternalServerException(e);
     }
