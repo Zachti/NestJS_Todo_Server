@@ -1,12 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TodoModule, Todos } from './todo';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import {
-  postgresConfig,
-  commonConfig,
-  mongoConfig,
-  validationSchema,
-} from './config';
+import { postgresConfig, mongoConfig, validationSchema } from './config';
 import { ConfigModule, ConfigType, ConfigService } from '@nestjs/config';
 import { APP_FILTER } from '@nestjs/core';
 import {
@@ -22,7 +17,7 @@ import { MongoTodo } from './todo/entities/mongoTodo.entity';
     TodoModule,
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [commonConfig, mongoConfig, postgresConfig],
+      load: [mongoConfig, postgresConfig],
       validationSchema,
       validationOptions: { presence: 'required' },
     }),

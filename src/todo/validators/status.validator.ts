@@ -12,15 +12,14 @@ interface StateValidationOptions {
 @Injectable()
 export class StateValidationPipe implements PipeTransform<string> {
   constructor(private readonly options?: StateValidationOptions) {}
-  transform(value: string, metadata: ArgumentMetadata): string {
+  transform(value: any, metadata: ArgumentMetadata): string {
     if (!value) return value;
 
     const disallowAll = this.options ? this.options.disallowAll : false;
-    const stateValues = Object.values(State);
 
     if (
       (disallowAll && value === State.All) ||
-      !stateValues.includes(value as State)
+      !Object.values(State).includes(value)
     ) {
       throw new BadRequestException('Error: invalid status!');
     }

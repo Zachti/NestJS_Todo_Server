@@ -6,7 +6,6 @@ import {
   Delete,
   Put,
   Query,
-  UsePipes,
   HttpCode,
 } from '@nestjs/common';
 import { TodoService } from './todo.service';
@@ -38,8 +37,12 @@ export class TodoController {
   @Get('size')
   @HttpCode(200)
   async count(
+<<<<<<< HEAD
     @Query('persistenceMethod', new DatabaseTypeValidationPipe())
     database: DatabaseType,
+=======
+    @Query('database', new DatabaseTypeValidationPipe()) database: DatabaseType,
+>>>>>>> be6f21f2e7c2ea30c94baf008c90c8877a989d67
     @Query('status', new StateValidationPipe()) status: State,
   ) {
     const count = await this.todoService.count(database, status);
@@ -49,8 +52,12 @@ export class TodoController {
   @Get('content')
   @HttpCode(200)
   async getContent(
+<<<<<<< HEAD
     @Query('persistenceMethod', new DatabaseTypeValidationPipe())
     database: DatabaseType,
+=======
+    @Query('database', new DatabaseTypeValidationPipe()) database: DatabaseType,
+>>>>>>> be6f21f2e7c2ea30c94baf008c90c8877a989d67
     @Query('status', new StateValidationPipe()) status: State,
     @Query('sortBy', new SortByTypeValidator()) sortBy: SortByTypes,
   ) {
