@@ -12,6 +12,7 @@ import { Todos } from './entities/todo.entity';
 import { DatabaseType, SortByTypes, State } from './enums/enums';
 import { LoggerService } from '../logger/logger.service';
 import { MongoTodo } from './entities/mongoTodo.entity';
+import { outputTodo } from './interfaces';
 
 @Injectable()
 export class TodoService {
@@ -22,20 +23,13 @@ export class TodoService {
     private postgresRepository: Repository<Todos>,
     private readonly logger: LoggerService,
   ) {}
-  async create(createTodoDto: CreateTodoDto) {
+  async create(createTodoDto: CreateTodoDto): Promise<number> {
     await this.checkIfTodoExist({ title: createTodoDto.title }, true);
 
     try {
-      const maxRawid = await this.postgresRepository
-        .createQueryBuilder('todos')
-        .select('MAX(todos.rawid)', 'max')
-        .getRawOne();
-
       const todo = {
         ...createTodoDto,
         duedate: createTodoDto.dueDate,
-        state: State.Pending,
-        rawid: maxRawid.max + 1,
       };
 
       const newTodo = await this.postgresRepository.save(todo);
@@ -50,7 +44,7 @@ export class TodoService {
     }
   }
 
-  async count(database: DatabaseType, state: State) {
+  async count(database: DatabaseType, state: State): Promise<number> {
     try {
       const repository = this.getDbConnection(database);
 
@@ -68,7 +62,11 @@ export class TodoService {
     }
   }
 
-  async getContent(database: DatabaseType, state: State, sortBy: SortByTypes) {
+  async getContent(
+    database: DatabaseType,
+    state: State,
+    sortBy: SortByTypes,
+  ): Promise<outputTodo[]> {
     try {
       const repository = this.getDbConnection(database);
       let res =
@@ -110,7 +108,7 @@ export class TodoService {
     }
   }
 
-  async update(rawid: number, updateTodoDto: UpdateTodoDto) {
+  async update(rawid: number, updateTodoDto: UpdateTodoDto): Promise<State> {
     const { postgresTodo } = await this.checkIfTodoExist({ rawid });
     try {
       await this.postgresRepository.update(rawid, updateTodoDto);
@@ -124,7 +122,7 @@ export class TodoService {
     }
   }
 
-  async remove(rawid: number) {
+  async remove(rawid: number): Promise<number> {
     const { postgresTodo, mongoTodo } = await this.checkIfTodoExist({ rawid });
     try {
       await this.postgresRepository.remove(postgresTodo);
@@ -148,7 +146,7 @@ export class TodoService {
   private async checkIfTodoExist(
     input: { title?: string; rawid?: number },
     create: boolean = false,
-  ) {
+  ): Promise<any> {
     const { title, rawid } = input;
 
     const postgresTodo = title

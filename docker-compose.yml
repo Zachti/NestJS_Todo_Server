@@ -2,19 +2,17 @@ version: '3'
 services:
   postgres:
     image: theshultz/kaplat-postgres-instance:latest
-    #to expose postgres container externally
     networks:
       - todo_network
     ports:
       - '5432:5432'
   mongo:
     image: theshultz/kaplat-mongo-instance:latest
-    #to expose mongo container externally
     networks:
       - todo_network
     ports:
       - '27017:27017'
-  app:
+  todoApp:
     networks:
       - todo_network
     ports:

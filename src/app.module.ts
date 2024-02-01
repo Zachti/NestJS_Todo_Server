@@ -23,7 +23,6 @@ import { MongoTodo } from './todo/entities/mongoTodo.entity';
     }),
     TypeOrmModule.forRootAsync({
       name: 'postgres',
-      imports: [ConfigModule],
       useFactory: (postgresCfg: ConfigType<typeof postgresConfig>) => {
         return {
           type: 'postgres',
@@ -36,7 +35,6 @@ import { MongoTodo } from './todo/entities/mongoTodo.entity';
     }),
     TypeOrmModule.forRootAsync({
       name: 'mongodb',
-      imports: [ConfigModule],
       useFactory: (mongoCfg: ConfigType<typeof mongoConfig>) => {
         return {
           type: 'mongodb',

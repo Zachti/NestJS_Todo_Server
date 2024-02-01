@@ -1,9 +1,9 @@
 import { State } from '../enums/enums';
-import { Column, Entity, PrimaryColumn } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('todos')
 export class Todos {
-  @PrimaryColumn()
+  @PrimaryGeneratedColumn()
   rawid: number;
 
   @Column({})
