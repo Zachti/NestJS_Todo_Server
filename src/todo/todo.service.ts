@@ -37,13 +37,11 @@ export class TodoService {
         rawid: maxRawid.max + 1,
       });
 
-      const res = await this.postgresRepository.save(newTodo);
-      const mongoTodo = this.mongoRepository.create(res);
-      await this.mongoRepository.save(mongoTodo);
+      const mongoTodo = this.mongoRepository.create(newTodo);
 
-      this.logger.info(`new todo created in the DBs. id: ${res.rawid}`);
-      this.logger.info(`res: ${JSON.stringify(res)}`);
-      return res.rawid;
+      this.logger.info(`new todo created in the DBs. id: ${mongoTodo.rawid}`);
+      this.logger.info(`res: ${JSON.stringify(mongoTodo)}`);
+      return mongoTodo.rawid;
     } catch (e) {
       this.logAndThrowInternalServerException(e);
     }
