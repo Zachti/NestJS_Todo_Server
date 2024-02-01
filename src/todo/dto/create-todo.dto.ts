@@ -12,5 +12,5 @@ export class CreateTodoDto {
 
   @IsNotEmpty()
   @DateNotInPast()
-  dueDate: number;
+  duedate: number;
 }

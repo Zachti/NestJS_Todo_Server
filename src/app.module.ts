@@ -29,7 +29,7 @@ import { MongoTodo } from './todo/entities/mongoTodo.entity';
           type: 'postgres',
           url: postgresCfg.url,
           entities: [Todos],
-          synchronize: false,
+          synchronize: true,
         };
       },
       inject: [postgresConfig.KEY],
@@ -44,7 +44,7 @@ import { MongoTodo } from './todo/entities/mongoTodo.entity';
           port: mongoCfg.port,
           database: mongoCfg.database,
           collection: mongoCfg.collection,
-          synchronize: false,
+          synchronize: true,
           entities: [MongoTodo],
         };
       },

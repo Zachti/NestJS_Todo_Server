@@ -26,25 +26,15 @@ export class TodoService {
     await this.checkIfTodoExist({ title: createTodoDto.title }, true);
 
     try {
-      const maxRawid = await this.postgresRepository
-        .createQueryBuilder('todos')
-        .select('MAX(todos.rawid)', 'max')
-        .getRawOne();
+      const todo = { ...createTodoDto };
 
-      const todo = {
-        ...createTodoDto,
-        duedate: createTodoDto.dueDate,
-        state: State.Pending,
-        rawid: maxRawid.max + 1,
-      };
-
-      const newTodo = await this.postgresRepository.save(todo);
+      const res = await this.postgresRepository.save(todo);
 
       await this.mongoRepository.save(todo);
 
-      this.logger.info(`new todo created in the DBs. id: ${newTodo.rawid}`);
-      this.logger.info(`res: ${JSON.stringify(newTodo)}`);
-      return newTodo.rawid;
+      this.logger.info(`new todo created in the DBs. id: ${res.rawid}`);
+      this.logger.info(`res: ${JSON.stringify(res)}`);
+      return res.rawid;
     } catch (e) {
       this.logAndThrowInternalServerException(e);
     }

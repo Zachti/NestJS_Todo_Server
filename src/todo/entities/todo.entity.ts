@@ -1,12 +1,15 @@
 import { State } from '../enums/enums';
-import { Column, Entity, PrimaryColumn } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('todos')
 export class Todos {
-  @PrimaryColumn()
+  @PrimaryGeneratedColumn()
   rawid: number;
 
-  @Column({})
+  @Column()
+  title: string;
+
+  @Column()
   content: string;
 
   @Column({ type: 'bigint' })
@@ -14,7 +17,4 @@ export class Todos {
 
   @Column({ default: State.Pending })
   state: State;
-
-  @Column()
-  title: string;
 }
