@@ -18,7 +18,6 @@ export class CustomNotFoundExceptionFilter extends BaseExceptionFilter {
       const message = exception.message;
 
       response.status(status).json({
-        statusCode: status,
         errorMessage: message,
       });
     }

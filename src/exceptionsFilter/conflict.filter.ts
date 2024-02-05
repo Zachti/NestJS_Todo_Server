@@ -18,7 +18,6 @@ export class CustomConflictExceptionFilter implements ExceptionFilter {
       const message = exception.message;
 
       response.status(status).json({
-        statusCode: status,
         errorMessage: message,
       });
     }
