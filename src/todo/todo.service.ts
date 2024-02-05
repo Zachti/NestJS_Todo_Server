@@ -84,8 +84,8 @@ export class TodoService {
       }
 
       const outputTodo = res.map((item) => {
-        const { rawid, ...rest } = item;
-        return { id: rawid, ...rest };
+        const { rawid, state, title, ...rest } = item;
+        return { id: rawid, title, ...rest, status: state };
       });
 
       const outputTodoList = sortBy

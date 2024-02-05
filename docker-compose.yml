@@ -1,39 +1,19 @@
-version: '3'
+version: "3"
 services:
   postgres:
     image: theshultz/kaplat-postgres-instance:latest
-    #to expose postgres container externally
-    networks:
-      - todo_network
+#to expose postgres container externally
     ports:
-      - '5432:5432'
+      - "5432:5432"
   mongo:
     image: theshultz/kaplat-mongo-instance:latest
-    #to expose mongo container externally
-    networks:
-      - todo_network
+#to expose mongo container externally
     ports:
-      - '27017:27017'
+      - "27017:27017"
   app:
-    networks:
-      - todo_network
+    image: zachtirosh/todo_server_db:0.3
     ports:
-      - '3769:9285'
-    build:
-      context: ./
-      dockerfile: 'dockerfile'
-      target: 'build'
-    command: sh -c "npm run start:dev"
-    restart: 'unless-stopped'
-    env_file:
-      - .env
-    volumes:
-      - .:/home/node
-      - ./node_modules:/home/node
+      - "3769:9285"
     depends_on:
       - postgres
       - mongo
-
-networks:
-  todo_network:
-    driver: bridge
