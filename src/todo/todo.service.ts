@@ -84,8 +84,8 @@ export class TodoService {
       }
 
       const outputTodo = res.map((item) => {
-        const { rawid, state, title, ...rest } = item;
-        return { id: rawid, title, ...rest, status: state };
+        const { rawid, state, title, duedate, content } = item;
+        return { id: rawid, title, content, dueDate: duedate, status: state };
       });
 
       const outputTodoList = sortBy
@@ -94,7 +94,7 @@ export class TodoService {
               case SortByTypes.Id:
                 return a.id - b.id;
               case SortByTypes.DueDate:
-                return a.duedate - b.duedate;
+                return a.dueDate - b.dueDate;
               case SortByTypes.Title:
                 return a.title.localeCompare(b.title);
             }
